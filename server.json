@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.aahl/mcp-server",
+  "title": "MCP Server",
+  "description": "MCP Server",
+  "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/aahl/mcp-server",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "mcp-server",
+      "version": "0.0.0",
+      "transport": {"type": "stdio"}
+    },
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/aahl/mcp-server:latest",
+      "transport": {"type": "stdio"}
+    }
+  ]
+}
