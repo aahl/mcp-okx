@@ -1,9 +1,9 @@
 services:
-  mcp-server:
-    container_name: mcp_server
-    image: ghcr.nju.edu.cn/aahl/mcp-server
+  mcp-okx:
+    container_name: mcp_okx
+    image: ghcr.nju.edu.cn/aahl/mcp-okx
     ports:
-      - 8809:80
+      - 8811:80
     environment:
       TZ: Asia/Shanghai
       UV_INDEX_URL: https://mirrors.ustc.edu.cn/pypi/simple
