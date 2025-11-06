@@ -2,19 +2,27 @@ import os
 import logging
 import argparse
 from fastmcp import FastMCP
+from fastmcp.server.auth.providers.jwt import StaticTokenVerifier
 from starlette.middleware.cors import CORSMiddleware
 
 from . import (
     account,
-    trade,
+    trading,
+    config,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-mcp = FastMCP(name="mcp-okx", version="0.1.0a1")
+verifier = StaticTokenVerifier(tokens={
+    config.MCP_AUTH_TOKEN: {
+        "client_id": "mcp",
+        "scopes": [],
+    }
+})
+mcp = FastMCP(name="mcp-okx", version="0.1.0a2", auth=verifier)
 account.add_tools(mcp)
-trade.add_tools(mcp)
+trading.add_tools(mcp)
 
 
 def main():
@@ -27,7 +35,7 @@ def main():
 
     args = parser.parse_args()
     if args.http or mode == "http":
-        app = mcp.streamable_http_app()
+        app = mcp.http_app()
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],

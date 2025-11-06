@@ -17,7 +17,8 @@
         "OKX_API_SECRET": "api-secret-key",
         "OKX_PASSPHRASE": "api-passphrase",
         "OKX_TRADE_FLAG": "1", # 0: Production trading, 1: Demo trading
-        "OKX_BASE_URL": "https://www.okx.com"
+        "OKX_BASE_URL": "https://www.okx.com", # Optional
+        "MCP_AUTH_TOKEN": "your-custom-token"  # Default same as OKX_API_KEY
       }
     }
   }
@@ -35,7 +36,10 @@ docker-compose up -d
 {
   "mcpServers": {
     "mcp-okx": {
-      "url": "http://0.0.0.0:8811/mcp" # Streamable HTTP
+      "url": "http://0.0.0.0:8811/mcp", # Streamable HTTP
+      "headers": {
+        "Authorization": "Bearer your-okx-api-key-or-custom-token"
+      }
     }
   }
 }
@@ -49,6 +53,7 @@ docker-compose up -d
 - `OKX_PASSPHRASE`: API passphrase of your OKX account.
 - `OKX_TRADE_FLAG`: 0: Production trading, 1: Demo trading
 - `OKX_BASE_URL`: Base URL of OKX. Default: `https://www.okx.com`
+- `MCP_AUTH_TOKEN`: Custom token for authentication. Default same as `OKX_API_KEY`
 
 
 ## 🛠️ Available Tools

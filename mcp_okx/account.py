@@ -8,7 +8,6 @@ ACCOUNT = AccountAPI(
     api_key=OKX_API_KEY,
     api_secret_key=OKX_API_SECRET,
     passphrase=OKX_PASSPHRASE,
-    use_server_time=False,
     flag=OKX_TRADE_FLAG,
     domain=OKX_BASE_URL,
 )
