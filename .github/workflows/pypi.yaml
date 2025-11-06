@@ -13,8 +13,11 @@ jobs:
   build:
     name: Build distribution 📦
     runs-on: ubuntu-latest
+    outputs:
+      PYPI_PKG_NAME: ${{ steps.prepare.outputs.PYPI_PKG_NAME }}
     steps:
     - name: Prepare
+      id: prepare
       run: |
         repo=${GITHUB_REPOSITORY#*/}
         echo "PYPI_PKG_NAME=$repo" >> $GITHUB_ENV
