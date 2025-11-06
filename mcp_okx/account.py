@@ -22,7 +22,9 @@ def add_tools(mcp: FastMCP):
                     "It is recommended to use this tool to obtain account configuration information before using all other tools",
     )
     def account_config():
-        resp = ACCOUNT.get_account_config()
+        resp = ACCOUNT.get_account_config() or {}
+        if resp.get("code"):
+            return resp
         resp["_response_schema"] = """
         uid	String	Account ID of current request
         mainUid	String	Main Account ID of current request.
@@ -91,7 +93,9 @@ def add_tools(mcp: FastMCP):
     def account_balance(
         ccy: str = Field("", description="Single currency or multiple currencies (no more than 20) separated with comma, e.g. BTC or BTC,ETH."),
     ):
-        resp = ACCOUNT.get_account_balance(ccy)
+        resp = ACCOUNT.get_account_balance(ccy) or {}
+        if resp.get("code"):
+            return resp
         resp["_response_schema"] = """
         totalEq: The total amount of equity in USD
         isoEq: Isolated margin equity in USD. Applicable to Futures mode/Multi-currency margin/Portfolio margin
@@ -185,6 +189,7 @@ def add_tools(mcp: FastMCP):
     )
     def account_positions(
         instType: str = Field("", description="Instrument type: "
+                                              "`SPOT`: 币币现货/"
                                               "`MARGIN`: 币币杠杆/"
                                               "`SWAP`: 永续合约/"
                                               "`FUTURES`: 交割合约/"
@@ -194,7 +199,11 @@ def add_tools(mcp: FastMCP):
         posId: str = Field("", description="Single position ID or multiple position IDs (no more than 20) separated with comma. "
                                            "There is attribute expiration, the posId and position information will be cleared if it is more than 30 days after the last full close position."),
     ):
-        resp = ACCOUNT.get_positions(instType, instId, posId)
+        if str(instType).upper() in ["SPOT"]:
+            instType = ""
+        resp = ACCOUNT.get_positions(instType, instId=instId, posId=posId) or {}
+        if resp.get("code"):
+            return resp
         resp["_response_schema"] = """
         mgnMode: Margin mode
         posSide: Position side. long, pos is positive; short, pos is positive;
@@ -278,7 +287,9 @@ def add_tools(mcp: FastMCP):
                                               "`FUTURES`: 交割合约/"
                                               "`OPTION`: 期权."),
     ):
-        resp = ACCOUNT.get_position_risk(instType)
+        resp = ACCOUNT.get_position_risk(instType) or {}
+        if resp.get("code"):
+            return resp
         resp["_response_schema"] = """
         adjEq: Adjusted / Effective equity in USD. Applicable to Multi-currency margin and Portfolio margin
         balData: Detailed asset information in all currencies
