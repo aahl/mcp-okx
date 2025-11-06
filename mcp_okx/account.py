@@ -18,7 +18,7 @@ def add_tools(mcp: FastMCP):
 
     @mcp.tool(
         title="Get account configuration",
-        description="Retrieve current account configuration. "
+        description="Retrieve current OKX account configuration. "
                     "It is recommended to use this tool to obtain account configuration information before using all other tools",
     )
     def account_config():
@@ -86,7 +86,7 @@ def add_tools(mcp: FastMCP):
 
     @mcp.tool(
         title="Get account balance",
-        description="Retrieve a list of assets (with non-zero balance), remaining balance, and available amount in the trading account",
+        description="Retrieve a list of assets (with non-zero balance), remaining balance, and available amount in the OKX trading account",
     )
     def account_balance(
         ccy: str = Field("", description="Single currency or multiple currencies (no more than 20) separated with comma, e.g. BTC or BTC,ETH."),
@@ -179,12 +179,17 @@ def add_tools(mcp: FastMCP):
 
     @mcp.tool(
         title="Get account positions",
-        description="Retrieve information on your positions. When the account is in net mode, net positions will be displayed, "
+        description="Retrieve information on your OKX positions. When the account is in net mode, net positions will be displayed, "
                     "and when the account is in long/short mode, long or short positions will be displayed. "
                     "Return in reverse chronological order using ctime.",
     )
     def account_positions(
-        instType: str = Field("", description="Instrument type: `MARGIN/SWAP/FUTURES/OPTION`. `instId` will be checked against instType when both parameters are passed."),
+        instType: str = Field("", description="Instrument type: "
+                                              "`MARGIN`: 币币杠杆/"
+                                              "`SWAP`: 永续合约/"
+                                              "`FUTURES`: 交割合约/"
+                                              "`OPTION`: 期权."
+                                              "`instId` will be checked against `instType` when both parameters are passed."),
         instId: str = Field("", description="Instrument ID, e.g. `BTC-USDT-SWAP`. Single instrument ID or multiple instrument IDs (no more than 10) separated with comma"),
         posId: str = Field("", description="Single position ID or multiple position IDs (no more than 20) separated with comma. "
                                            "There is attribute expiration, the posId and position information will be cleared if it is more than 30 days after the last full close position."),
@@ -264,10 +269,14 @@ def add_tools(mcp: FastMCP):
 
     @mcp.tool(
         title="Get account position risk",
-        description="Obtain the overall holding risk of the account",
+        description="Obtain the overall holding risk of the OKX account",
     )
     def account_position_risk(
-        instType: str = Field("", description="Instrument type: `MARGIN/SWAP/FUTURES/OPTION`"),
+        instType: str = Field("", description="Instrument type: "
+                                              "`MARGIN`: 币币杠杆/"
+                                              "`SWAP`: 永续合约/"
+                                              "`FUTURES`: 交割合约/"
+                                              "`OPTION`: 期权."),
     ):
         resp = ACCOUNT.get_position_risk(instType)
         resp["_response_schema"] = """

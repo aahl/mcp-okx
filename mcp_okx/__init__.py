@@ -12,7 +12,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-mcp = FastMCP(name="mcp-okx", version="0.1.0a0")
+mcp = FastMCP(name="mcp-okx", version="0.1.0a1")
 account.add_tools(mcp)
 trade.add_tools(mcp)
 
