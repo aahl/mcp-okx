@@ -20,7 +20,7 @@ verifier = StaticTokenVerifier(tokens={
         "scopes": [],
     }
 })
-mcp = FastMCP(name="mcp-okx", version="0.1.0a2", auth=verifier)
+mcp = FastMCP(name="mcp-okx", version="0.1.0a3", auth=verifier)
 account.add_tools(mcp)
 trading.add_tools(mcp)
 

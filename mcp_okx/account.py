@@ -90,7 +90,8 @@ def add_tools(mcp: FastMCP):
         description="Retrieve a list of assets (with non-zero balance), remaining balance, and available amount in the OKX trading account",
     )
     def account_balance(
-        ccy: str = Field("", description="Single currency or multiple currencies (no more than 20) separated with comma, e.g. BTC or BTC,ETH."),
+        ccy: str = Field("", description="Single currency or multiple currencies (no more than 20) separated with comma, e.g. BTC or BTC,ETH."
+                                         "Optional, all by default if not passed"),
     ):
         resp = ACCOUNT.get_account_balance(ccy) or {}
         if resp.get("code"):
@@ -193,10 +194,13 @@ def add_tools(mcp: FastMCP):
                                               "`SWAP`: 永续合约/"
                                               "`FUTURES`: 交割合约/"
                                               "`OPTION`: 期权."
-                                              "`instId` will be checked against `instType` when both parameters are passed."),
-        instId: str = Field("", description="Instrument ID, e.g. `BTC-USDT-SWAP`. Single instrument ID or multiple instrument IDs (no more than 10) separated with comma"),
+                                              "`instId` will be checked against `instType` when both parameters are passed. "
+                                              "Optional, all by default if not passed"),
+        instId: str = Field("", description="Instrument ID, e.g. `BTC-USDT-SWAP`. Single instrument ID or multiple instrument IDs (no more than 10) separated with comma. "
+                                            "Optional, all by default if not passed"),
         posId: str = Field("", description="Single position ID or multiple position IDs (no more than 20) separated with comma. "
-                                           "There is attribute expiration, the posId and position information will be cleared if it is more than 30 days after the last full close position."),
+                                           "There is attribute expiration, the posId and position information will be cleared if it is more than 30 days after the last full close position. "
+                                           "Optional, all by default if not passed"),
     ):
         if str(instType).upper() in ["SPOT"]:
             instType = ""
@@ -284,7 +288,8 @@ def add_tools(mcp: FastMCP):
                                               "`MARGIN`: 币币杠杆/"
                                               "`SWAP`: 永续合约/"
                                               "`FUTURES`: 交割合约/"
-                                              "`OPTION`: 期权."),
+                                              "`OPTION`: 期权. "
+                                              "Optional, all by default if not passed"),
     ):
         resp = ACCOUNT.get_position_risk(instType) or {}
         if resp.get("code"):

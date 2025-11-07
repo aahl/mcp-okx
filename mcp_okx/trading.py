@@ -22,21 +22,32 @@ def add_tools(mcp: FastMCP):
     )
     def place_order(
         instId: str = Field(description="Instrument ID, e.g. BTC-USDT"),
-        tdMode: str = Field(description="Trade mode."
-                                        "Margin mode: `cross`/`isolated`. Non-Margin mode: `cash`. "
-                                        "\n`spot_isolated`: (only applicable to SPOT lead trading, `tdMode` should be `spot_isolated` for SPOT lead trading.)"
-                                        "\nNote: `isolated` is not available in multi-currency margin mode and portfolio margin mode."),
+        tdMode: str = Field(description="Trade Mode, when placing an order, you need to specify the trade mode."
+                                        "\nSpot mode: `cash`(SPOT and OPTION buyer; 币币和期权买方)"
+                                        "\nFutures mode:"
+                                        "\n- `cash`(SPOT; 币币)"
+                                        "\n- `cross`(Cross MARGIN/FUTURES/SWAP/OPTION; 全仓杠杆/交割/永续/期权)"
+                                        "\n- `isolated`(Isolated MARGIN/FUTURES/SWAP/OPTION; 逐仓杠杆/交割/永续/期权)"
+                                        "\nMulti-currency margin mode: `cross`(Cross SPOT/FUTURES/SWAP/OPTION; 全仓币币/交割/永续/期权)"
+                                        "\nPortfolio margin: `cross`(Cross SPOT/FUTURES/SWAP/OPTION; 全仓币币/交割/永续/期权)"
+        ),
         side: str = Field(description="Order side, `buy`/`sell`"),
-        ordType: str = Field(description="Order type. "
-                                         "\n`market`: Market order, only applicable to SPOT/MARGIN/FUTURES/SWAP"
-                                         "\n`limit`: Limit order"
-                                         "\n`post_only`: Post-only order"
-                                         "\n`fok`: Fill-or-kill order"
-                                         "\n`ioc`: Immediate-or-cancel order"
-                                         "\n`optimal_limit_ioc`: Market order with immediate-or-cancel order (applicable only to Expiry Futures and Perpetual Futures)."
-                                         "\n`mmp`: Market Maker Protection (only applicable to Option in Portfolio Margin mode)"
-                                         "\n`mmp_and_post_only`: Market Maker Protection and Post-only order(only applicable to Option in Portfolio Margin mode)"),
-        sz: str = Field(description="Quantity to buy or sell"),
+        ordType: str = Field(description="Order type. When creating a new order, you must specify the order type. "
+                                         "The order type you specify will affect: 1) what order parameters are required, and 2) how the matching system executes your order."
+                                         "\nThe following are valid order types:"
+                                         "\n`limit`: Limit order, which requires specified sz and px."
+                                         "\n`market`: Market order. For SPOT and MARGIN, market order will be filled with market price (by swiping opposite order book). For Expiry Futures and Perpetual Futures, market order will be placed to order book with most aggressive price allowed by Price Limit Mechanism. For OPTION, market order is not supported yet. As the filled price for market orders cannot be determined in advance, OKX reserves/freezes your quote currency by an additional 5% for risk check."
+                                         "\n`post_only`: Post-only order, which the order can only provide liquidity to the market and be a maker. If the order would have executed on placement, it will be canceled instead."
+                                         "\n`fok`: Fill or kill order. If the order cannot be fully filled, the order will be canceled. The order would not be partially filled."
+                                         "\n`ioc`: Immediate or cancel order. Immediately execute the transaction at the order price, cancel the remaining unfilled quantity of the order, and the order quantity will not be displayed in the order book."
+                                         "\n`optimal_limit_ioc`: Market order with ioc (immediate or cancel). Immediately execute the transaction of this market order, cancel the remaining unfilled quantity of the order, and the order quantity will not be displayed in the order book. Only applicable to Expiry Futures and Perpetual Futures."),
+        sz: str = Field(description="Quantity to buy or sell."
+                                    "\nFor SPOT/MARGIN Buy and Sell Limit Orders, it refers to the quantity in base currency."
+                                    "\nFor MARGIN Buy Market Orders, it refers to the quantity in quote currency."
+                                    "\nFor MARGIN Sell Market Orders, it refers to the quantity in base currency."
+                                    "\nFor SPOT Market Orders, it is set by tgtCcy."
+                                    "\nFor FUTURES/SWAP/OPTION orders, it refers to the number of contracts."
+        ),
         ccy: str = Field("", description="Margin currency. Applicable to all `isolated` `MARGIN` orders and `cross` `MARGIN` orders in `Futures mode`"),
         clOrdId: str = Field("", description="Client Order ID as assigned by the client."
                                              "A combination of case-sensitive alphanumerics, all numbers, or all letters of up to 32 characters."
@@ -44,13 +55,45 @@ def add_tools(mcp: FastMCP):
         tag: str = Field("", description="Order tag. A combination of case-sensitive alphanumerics, all numbers, or all letters of up to 16 characters"),
         posSide: str = Field("", description="Position side. The default is `net` in the net mode. "
                                              "It is required in the `long/short` mode, and can only be `long` or `short`. "
-                                             "Only applicable to `FUTURES`/`SWAP`."),
+                                             "Only applicable to `FUTURES`/`SWAP`."
+                                             "\nPosition side, this parameter is not mandatory in net mode. If you pass it through, the only valid value is net."
+                                             "\nIn long/short mode, it is mandatory. Valid values are long or short."
+                                             "\nIn long/short mode, side and posSide need to be specified in the combinations below:"
+                                             "\nOpen long: buy and open long (side: fill in buy; posSide: fill in long)"
+                                             "\nOpen short: sell and open short (side: fill in sell; posSide: fill in short)"
+                                             "\nClose long: sell and close long (side: fill in sell; posSide: fill in long)"
+                                             "\nClose short: buy and close short (side: fill in buy; posSide: fill in short)"
+                                             "\nPortfolio margin mode: Expiry Futures and Perpetual Futures only support net mode"
+        ),
         px: str = Field("", description="Order price. Only applicable to `limit`,`post_only`,`fok`,`ioc`,`mmp`,`mmp_and_post_only` order. "
-                                        "When placing an option order, one of px/pxUsd/pxVol must be filled in, and only one can be filled in"),
+                                        "When placing an option order, one of px/pxUsd/pxVol must be filled in, and only one can be filled in."
+                                        "\nThe value for px must be a multiple of tickSz for OPTION orders."
+                                        "\nIf not, the system will apply the rounding rules below. Using tickSz 0.0005 as an example:"
+                                        "\nThe px will be rounded up to the nearest 0.0005 when the remainder of px to 0.0005 is more than 0.00025 or `px` is less than 0.0005."
+                                        "\nThe px will be rounded down to the nearest 0.0005 when the remainder of px to 0.0005 is less than 0.00025 and `px` is more than 0.0005."
+        ),
         tgtCcy: str = Field("", description="Whether the target currency uses the quote or base currency. "
-                                            "`base_ccy`: Base currency, `quote_ccy`: Quote currency. "
-                                            "Only applicable to `SPOT` Market Orders. "
-                                            "Default is `quote_ccy` for buy, `base_ccy` for sell"),
+                                            "\nThis parameter is used to specify the order quantity in the order request is denominated in the quantity of base or quote currency. This is applicable to SPOT Market Orders only."
+                                            "\nBase currency: `base_ccy`; Quote currency: `quote_ccy`"
+                                            "\nIf you use the Base Currency quantity for buy market orders or the Quote Currency for sell market orders, please note:"
+                                            "\n1. If the quantity you enter is greater than what you can buy or sell, the system will execute the order according to your maximum buyable or sellable quantity. "
+                                            "If you want to trade according to the specified quantity, you should use Limit orders."
+                                            "\n2. When the market price is too volatile, the locked balance may not be sufficient to buy the Base Currency quantity or sell to receive the Quote Currency that you specified. "
+                                            "We will change the quantity of the order to execute the order based on best effort principle based on your account balance. "
+                                            "In addition, we will try to over lock a fraction of your balance to avoid changing the order quantity."
+                                            "\n2.1 Example of base currency buy market order: "
+                                            "Taking the market order to buy 10 LTCs as an example, and the user can buy 11 LTC. At this time, if 10 < 11, the order is accepted. "
+                                            "When the LTC-USDT market price is 200, and the locked balance of the user is 3,000 USDT, as 200*10 < 3,000, the market order of 10 LTC is fully executed; "
+                                            "If the market is too volatile and the LTC-USDT market price becomes 400, 400*10 > 3,000, "
+                                            "the user's locked balance is not sufficient to buy using the specified amount of base currency, the user's maximum locked balance of 3,000 USDT will be used to settle the trade. "
+                                            "Final transaction quantity becomes 3,000/400 = 7.5 LTC."
+                                            "\n2.2 Example of quote currency sell market order: "
+                                            "Taking the market order to sell 1,000 USDT as an example, and the user can sell 1,200 USDT, 1,000 < 1,200, the order is accepted. "
+                                            "When the LTC-USDT market price is 200, and the locked balance of the user is 6 LTC, as 1,000/200 < 6, the market order of 1,000 USDT is fully executed; "
+                                            "If the market is too volatile and the LTC-USDT market price becomes 100, 100*6 < 1,000, "
+                                            "the user's locked balance is not sufficient to sell using the specified amount of quote currency, the user's maximum locked balance of 6 LTC will be used to settle the trade. "
+                                            "Final transaction quantity becomes 6 * 100 = 600 USDT."
+        ),
         reduceOnly: str | bool = Field("", description="Whether orders can only reduce in position size. "
                                                        "Valid options: `true` or `false`. The default value is `false`. "
                                                        "Only applicable to `MARGIN` orders, and `FUTURES`/`SWAP` orders in net mode. "
@@ -67,7 +110,25 @@ def add_tools(mcp: FastMCP):
                                                      "Valid options: `true` or `false`. The default value is `false`. "
                                                      "If `true`, system will not amend and reject the market order if user does not have sufficient funds. "
                                                      "Only applicable to SPOT Market Orders"),
-        attachAlgoOrds: list | None = Field(None, description="TP/SL information attached when placing order"),
+        attachAlgoOrds: list | None = Field(None, description="TP/SL information attached when placing order."
+                                                              "1. TP/SL algo order will be generated only when this order is filled fully, or there is no TP/SL algo order generated."
+                                                              "2. Attaching TP/SL is neither supported for market buy with `tgtCcy` is `base_ccy` or market sell with `tgtCcy` is `quote_ccy`"
+                                                              "3. If `tpOrdKind` is `limit`, and there is only one conditional TP order, `attachAlgoClOrdId` can be used as `clOrdId` for retrieving on `get_trade_order` tool."
+                                                              "4. For 'split TPs', including condition TP order and limit TP order."
+                                                              "* TP/SL orders in Split TPs only support one-way TP/SL. You can't use slTriggerPx&slOrdPx and tpTriggerPx&tpOrdPx at the same time, or error code 51076 will be thrown."
+                                                              "* Take-profit trigger price types (tpTriggerPxType) must be the same in an order with Split TPs attached, or error code 51080 will be thrown."
+                                                              "* Take-profit trigger prices (tpTriggerPx) cannot be the same in an order with Split TPs attached, or error code 51081 will be thrown."
+                                                              "* The size of the TP order among split TPs attached cannot be empty, or error code 51089 will be thrown."
+                                                              "* The total size of TP orders with Split TPs attached in a same order should equal the size of this order, or error code 51083 will be thrown."
+                                                              "* The number of TP orders with Split TPs attached in a same order cannot exceed 10, or error code 51079 will be thrown."
+                                                              "* Setting multiple TP and cost-price SL orders isn’t supported for spot and margin trading, or error code 51077 will be thrown."
+                                                              "* The number of SL orders with Split TPs attached in a same order cannot exceed 1, or error code 51084 will be thrown."
+                                                              "* The number of TP orders cannot be less than 2 when cost-price SL is enabled (amendPxOnTriggerType set as 1) for Split TPs, or error code 51085 will be thrown."
+                                                              "* All TP orders in one order must be of the same type, or error code 51091 will be thrown."
+                                                              "* TP order prices (tpOrdPx) in one order must be different, or error code 51092 will be thrown."
+                                                              "* TP limit order prices (tpOrdPx) in one order can't be –1 (market price), or error code 51093 will be thrown."
+                                                              "* You can't place TP limit orders in spot, margin, or options trading. Otherwise, error code 51094 will be thrown."
+        ),
     ):
         params = {
             'instId': instId, 'tdMode': tdMode, 'side': side, 'ordType': ordType, 'sz': sz, 'ccy': ccy,
