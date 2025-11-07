@@ -79,3 +79,12 @@ docker-compose up -d
 - `close_positions` - Liquidate all positions
 
 </details>
+
+<details>
+<summary><strong>Public Data</strong></summary>
+
+- `categories_summary` - Get popular cryptocurrency sections and coins
+- `popular_searches` - Get popular search crypto coins
+- `economic_calendar` - Get economic calendar data (Don't support demo trading)
+
+</details>
