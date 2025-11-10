@@ -22,7 +22,7 @@ def add_tools(mcp: FastMCP):
     )
     def account_config():
         resp = ACCOUNT.get_account_config() or {}
-        if resp.get("code"):
+        if int(resp.get("code", 0)):
             return resp
         resp["_response_schema"] = """
         uid	String	Account ID of current request
@@ -94,7 +94,7 @@ def add_tools(mcp: FastMCP):
                                          "Optional, all by default if not passed"),
     ):
         resp = ACCOUNT.get_account_balance(ccy) or {}
-        if resp.get("code"):
+        if int(resp.get("code", 0)):
             return resp
         resp["_response_schema"] = """
         totalEq: The total amount of equity in USD
@@ -205,7 +205,7 @@ def add_tools(mcp: FastMCP):
         if str(instType).upper() in ["SPOT"]:
             instType = ""
         resp = ACCOUNT.get_positions(instType, instId=instId, posId=posId) or {}
-        if resp.get("code"):
+        if int(resp.get("code", 0)):
             return resp
         resp["_response_schema"] = """
         mgnMode: Margin mode
@@ -292,7 +292,7 @@ def add_tools(mcp: FastMCP):
                                               "Optional, all by default if not passed"),
     ):
         resp = ACCOUNT.get_position_risk(instType) or {}
-        if resp.get("code"):
+        if int(resp.get("code", 0)):
             return resp
         resp["_response_schema"] = """
         adjEq: Adjusted / Effective equity in USD. Applicable to Multi-currency margin and Portfolio margin

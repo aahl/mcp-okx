@@ -79,3 +79,10 @@ docker-compose up -d
 - `close_positions` - Liquidate all positions
 
 </details>
+
+<details>
+<summary><strong>Market Data</strong></summary>
+
+- `market_tickers` - Get cryptocurrency rankings
+
+</details>

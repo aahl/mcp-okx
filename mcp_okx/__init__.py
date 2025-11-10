@@ -8,6 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from . import (
     account,
     trading,
+    market,
     config,
 )
 
@@ -20,9 +21,10 @@ verifier = StaticTokenVerifier(tokens={
         "scopes": [],
     }
 })
-mcp = FastMCP(name="mcp-okx", version="0.1.0a3", auth=verifier)
+mcp = FastMCP(name="mcp-okx", version="0.1.0", auth=verifier)
 account.add_tools(mcp)
 trading.add_tools(mcp)
+market.add_tools(mcp)
 
 
 def main():

@@ -93,6 +93,8 @@ def add_tools(mcp: FastMCP):
                                             "If the market is too volatile and the LTC-USDT market price becomes 100, 100*6 < 1,000, "
                                             "the user's locked balance is not sufficient to sell using the specified amount of quote currency, the user's maximum locked balance of 6 LTC will be used to settle the trade. "
                                             "Final transaction quantity becomes 6 * 100 = 600 USDT."
+                                            "\n在现货交易中，参数`tgtCcy`决定了数量参数`sz`的单位，它可以是交易对的基础货币或计价货币。例如，在交易对BTC-USDT中，基础货币是BTC，计价货币是USDT。"
+                                            "默认情况下，`tgtCcy`=quote_ccy(计价货币）用于买单，这意味着您指定的`sz`是以计价货币为单位的。而对于卖单`tgtCcy`的默认值为`base_ccy`，这意味着您指定的`sz`是以基础货币为单位的。"
         ),
         reduceOnly: str | bool = Field("", description="Whether orders can only reduce in position size. "
                                                        "Valid options: `true` or `false`. The default value is `false`. "
